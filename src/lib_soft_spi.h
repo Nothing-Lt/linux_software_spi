@@ -26,9 +26,9 @@ void spi_cs_free(void);
 
 void soft_spi_init(void);
 
-int soft_spi_read(uint8_t reg_addr, uint8_t* data, const size_t len);
+int soft_spi_read(uint8_t* data, const size_t len);
 
-int soft_spi_write(uint8_t reg_addr, uint8_t* data, const size_t len);
+int soft_spi_write(uint8_t* data, const size_t len);
 
 
 #endif

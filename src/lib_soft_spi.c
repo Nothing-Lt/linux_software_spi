@@ -280,12 +280,11 @@ static uint8_t _spi_byte_read_write(uint8_t data)
     return ret_data;
 }
 
-int soft_spi_read(uint8_t reg_addr, uint8_t* data, const size_t len)
+int soft_spi_read(uint8_t* data, const size_t len)
 {
     int i = 0;
 
     _spi_start();
-    _spi_byte_write(reg_addr);
 
     if(data_xchg_flag){
         for(i = 0 ; i < len ; i++){
@@ -304,12 +303,11 @@ int soft_spi_read(uint8_t reg_addr, uint8_t* data, const size_t len)
 
 }
 
-int soft_spi_write(uint8_t reg_addr,uint8_t* data, const size_t len)
+int soft_spi_write(uint8_t* data, const size_t len)
 {
     int i = 0;
 
     _spi_start();
-    _spi_byte_write(reg_addr);
 
     for(i = 0 ; i < len ; i++){
         _spi_byte_write(data[i]);

@@ -36,7 +36,6 @@ static struct class* cl;
 static struct device* dev;
 
 struct mod_ctrl_s mod_ctrl;
-uint8_t reg_addr; // device spi register
 size_t len;     // size of the data will be transfered
 void* buf = NULL; // buffer
 
@@ -188,36 +187,33 @@ static int device_release(struct inode* node, struct file* file)
 
 long device_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
+    int ret = -ENOSYS;
+
     switch(cmd)
     {
         case IOCTL_CMD_TAKE:
-            if(mod_ctrl.occupied_flag && (mod_ctrl.pid != current->pid)){
-                return -ENOSYS;
-            }
-            else if(mod_ctrl.occupied_flag){
-                break;
-            }
-            else{
+            spin_lock_irq(&wire_lock);
+            if(!mod_ctrl.occupied_flag){
                 if(spi_cs_request(arg)){
-                    return -ENOSYS;
+                    spin_unlock_irq(&wire_lock);
+                    break;
                 }
                 soft_spi_init();
                 mod_ctrl.occupied_flag = 1;
                 mod_ctrl.pid = current->pid;
+                ret = 0;
             }
+            spin_unlock_irq(&wire_lock);
         break;
 
         case IOCTL_CMD_RELEASE:
-            if(!mod_ctrl.occupied_flag){
-                return -ENOSYS;
-            }
-            else if(mod_ctrl.pid != current->pid){
-                return -ENOSYS;
-            }
-            else{
+            spin_lock_irq(&wire_lock);
+            if(mod_ctrl.occupied_flag && (mod_ctrl.pid == current->pid)){
                 spi_cs_free();
                 mod_ctrl.occupied_flag = 0;
+                ret = 0;
             }
+            spin_unlock_irq(&wire_lock);
         break;
         case IOCTL_CMD_DATA_XCHG:
             data_xchg_flag = 1;
@@ -239,9 +235,7 @@ static loff_t device_lseek(struct file* file, loff_t offset, int orig)
         return -1;
     }
 
-    reg_addr = (uint8_t)(offset & 0xFF);
-
-    printk(KERN_INFO "[sw_spi] %d lseek %ld %llx %d\n",current->pid, sizeof(loff_t), offset, reg_addr);
+    printk(KERN_INFO "[sw_spi] %d lseek %ld %llx\n",current->pid, sizeof(loff_t), offset);
 
     return 0;
 }
@@ -262,7 +256,7 @@ static ssize_t device_read(struct file* file, char* str,size_t size,loff_t* offs
         copy_from_user(buf, str, len);
     }
 
-    if(soft_spi_read(reg_addr, buf, len)){
+    if(soft_spi_read(buf, len)){
         printk(KERN_INFO "[sw_spi] no ack!!\n");
         return -1;
     }
@@ -295,7 +289,7 @@ static ssize_t device_write(struct file* file, const char* str, size_t size, lof
     
     copy_from_user(buf,str,size);
 
-    printk(KERN_INFO "[sw_spi] %d Going to write reg %d\n",current->pid, reg_addr);
+    printk(KERN_INFO "[sw_spi] %d Going to write\n",current->pid);
 
 #ifdef DEBUG_MOD
     int i;
@@ -306,7 +300,7 @@ static ssize_t device_write(struct file* file, const char* str, size_t size, lof
     printk(KERN_INFO "\n");
 #endif
 
-    if(soft_spi_write(reg_addr, buf, len)){
+    if(soft_spi_write(buf, len)){
         printk(KERN_INFO "no ack from slave\n");
         return -1;
     }
