@@ -47,6 +47,7 @@ unsigned cpol;
 unsigned cpha;
 
 extern unsigned data_xchg_flag;
+extern unsigned cs_ctrl_man_flag;
 
 module_param(mosi_pin, uint, S_IRUGO);
 module_param(miso_pin, uint, S_IRUGO);
@@ -215,6 +216,12 @@ long device_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
             }
             spin_unlock_irq(&wire_lock);
         break;
+        case IOCTL_CMD_CS_CTRL_MAN:
+            cs_ctrl_man_flag = 1;
+        break;
+        case IOCTL_CMD_CS_CTRL:
+            soft_spi_cs_set(arg);
+        break;
         case IOCTL_CMD_DATA_XCHG:
             data_xchg_flag = 1;
         break;
@@ -225,7 +232,7 @@ long device_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
             return EPERM;
     }
 
-    return 0;
+    return ret;
 }
 
 

@@ -3,6 +3,8 @@
 
 #define IOCTL_CMD_TAKE    0x10
 #define IOCTL_CMD_RELEASE 0x20
+#define IOCTL_CMD_CS_CTRL_MAN 0x1
+#define IOCTL_CMD_CS_CTRL     0x2
 #define IOCTL_CMD_DATA_READ 0x40
 #define IOCTL_CMD_DATA_XCHG 0x80
 

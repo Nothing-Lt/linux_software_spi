@@ -17,15 +17,14 @@ static unsigned _cpol = 0;
 static unsigned _cpha = 0;
 
 unsigned data_xchg_flag;
+unsigned cs_ctrl_man_flag = 0;
 unsigned long t_delay = _SPI_100KHZ;
 void (*_spi_delay)(unsigned long secs) = ndelay;
 
 #define SCK_HIGH() gpio_set_value(_sck_pin,1)
 #define SCK_LOW() gpio_set_value(_sck_pin,0)
 
-#define CS_LOW() gpio_set_value(_cs_pin,0)
-
-#define CS_HIGH() gpio_set_value(_cs_pin,1)
+#define CS_SET(val) gpio_set_value(_cs_pin,(val))
 
 #define MOSI_SET(val) gpio_set_value(_mosi_pin,(val))
 
@@ -110,6 +109,7 @@ void soft_spi_init(void)
     }
 
     data_xchg_flag = 0;
+    cs_ctrl_man_flag = 0;
 }
 
 static void _spi_start(void)
@@ -121,7 +121,9 @@ static void _spi_start(void)
         SCK_HIGH();
     }
 
-    CS_LOW();
+    if(!cs_ctrl_man_flag){
+        CS_SET(0);
+    }
     _spi_delay(t_delay);
 }
 
@@ -134,7 +136,9 @@ static void _spi_end(void)
         SCK_HIGH();
     }
 
-    CS_HIGH();
+    if(!cs_ctrl_man_flag){
+        CS_SET(1);
+    }
 }
 
 static int _spi_bit_read_write(int bit)
@@ -278,6 +282,11 @@ static uint8_t _spi_byte_read_write(uint8_t data)
     spin_unlock_irq(&wire_lock);
 
     return ret_data;
+}
+
+void soft_spi_cs_set(uint val)
+{
+    CS_SET(val);
 }
 
 int soft_spi_read(uint8_t* data, const size_t len)
