@@ -28,15 +28,13 @@ int HSPI_SDCARD = 0;
 /* slave select */
 static void SELECT(void)
 {
-	ioctl(HSPI_SDCARD, 0x2, 0);
-	return;
+	ioctl(HSPI_SDCARD, 0x4, 0);
 }
 
 /* slave deselect */
 static void DESELECT(void)
 {
-	ioctl(HSPI_SDCARD, 0x2, 1);
-	return;
+	ioctl(HSPI_SDCARD, 0x4, 1);
 }
 
 /* SPI transmit a byte */

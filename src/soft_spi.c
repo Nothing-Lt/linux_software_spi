@@ -219,6 +219,9 @@ long device_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
         case IOCTL_CMD_CS_CTRL_MAN:
             cs_ctrl_man_flag = 1;
         break;
+        case IOCTL_CMD_CS_CTRL_AUTO:
+            cs_ctrl_man_flag = 0;
+        break;
         case IOCTL_CMD_CS_CTRL:
             soft_spi_cs_set(arg);
         break;
