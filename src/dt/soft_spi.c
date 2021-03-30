@@ -159,6 +159,8 @@ static int soft_spi_bus_driver_remove(struct platform_device* dev)
     spi_miso_free();
     spi_sck_free();
 
+    device_destroy(cl, MKDEV(major_num,0));
+    
     return 0;
 }
 
@@ -209,7 +211,6 @@ static void __exit soft_spi_bus_driver_exit(void)
 
     platform_driver_unregister(&soft_spi_bus_drv);
     vfree(buf);
-    device_destroy(cl, MKDEV(major_num,0));
     class_unregister(cl);
     class_destroy(cl);
     unregister_chrdev(major_num, DEVICE_NAME);
